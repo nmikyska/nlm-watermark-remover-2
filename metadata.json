@@ -1,0 +1,5 @@
+{
+  "name": "NLM - Watermark Remover",
+  "description": "Remove watermarks from your PNG images using AI-powered image editing.",
+  "requestFramePermissions": []
+}
