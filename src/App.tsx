@@ -8,6 +8,7 @@ const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 export default function App() {
   const [image, setImage] = useState<string | null>(null);
+  const [imageMimeType, setImageMimeType] = useState<string>('image/png');
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,11 +17,13 @@ export default function App() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.type !== 'image/png') {
-        setError('Please upload a PNG image.');
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Please upload a PNG or JPEG image.');
         return;
       }
       setError(null);
+      setImageMimeType(file.type);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
@@ -45,7 +48,7 @@ export default function App() {
             {
               inlineData: {
                 data: base64Data,
-                mimeType: 'image/png',
+                mimeType: imageMimeType,
               },
             },
             {
@@ -58,7 +61,7 @@ export default function App() {
       let foundImage = false;
       for (const part of response.candidates?.[0]?.content?.parts || []) {
         if (part.inlineData) {
-          setProcessedImage(`data:image/png;base64,${part.inlineData.data}`);
+          setProcessedImage(`data:${imageMimeType};base64,${part.inlineData.data}`);
           foundImage = true;
           break;
         }
@@ -77,9 +80,10 @@ export default function App() {
 
   const downloadImage = () => {
     if (!processedImage) return;
+    const extension = imageMimeType === 'image/png' ? 'png' : 'jpg';
     const link = document.createElement('a');
     link.href = processedImage;
-    link.download = 'clearmark-result.png';
+    link.download = `nlm-result.${extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -104,7 +108,7 @@ export default function App() {
             <h1 className="text-xl font-bold tracking-tight">NLM</h1>
           </div>
           <div className="text-sm text-neutral-500 font-medium hidden sm:block">
-            AI-Powered PNG Watermark Removal
+            AI-Powered Image Watermark Removal
           </div>
         </div>
       </header>
@@ -115,7 +119,7 @@ export default function App() {
             Clean your images in seconds
           </h2>
           <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-            Upload a PNG image with a watermark, and our AI will naturally reconstruct the hidden details.
+            Upload a PNG or JPEG image with a watermark, and our AI will naturally reconstruct the hidden details.
           </p>
         </div>
 
@@ -132,12 +136,12 @@ export default function App() {
                   <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-neutral-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Upload className="text-blue-600" size={28} />
                   </div>
-                  <span className="text-lg font-semibold text-neutral-800">Drop your PNG here</span>
-                  <span className="text-sm text-neutral-500 mt-1">or click to browse files</span>
+                  <span className="text-lg font-semibold text-neutral-800">Drop your image here</span>
+                  <span className="text-sm text-neutral-500 mt-1">PNG, JPG, or JPEG</span>
                   <input 
                     type="file" 
                     className="hidden" 
-                    accept="image/png" 
+                    accept="image/png, image/jpeg, image/jpg" 
                     onChange={handleFileChange}
                     ref={fileInputRef}
                   />
@@ -242,7 +246,7 @@ export default function App() {
                     className="bg-neutral-900 hover:bg-neutral-800 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
                   >
                     <Download size={18} />
-                    Download PNG
+                    Download Image
                   </button>
                 )}
               </div>
@@ -265,9 +269,9 @@ export default function App() {
             <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-green-600 mb-4">
               <ImageIcon size={20} />
             </div>
-            <h3 className="text-lg font-bold mb-2">PNG Optimized</h3>
+            <h3 className="text-lg font-bold mb-2">Multi-Format Support</h3>
             <p className="text-neutral-600 text-sm leading-relaxed">
-              Specifically tuned for PNG images to maintain transparency and edge sharpness.
+              Optimized for PNG and JPEG images to maintain clarity and edge sharpness across formats.
             </p>
           </div>
           <div className="p-6 rounded-2xl bg-white border border-neutral-200 shadow-sm">
